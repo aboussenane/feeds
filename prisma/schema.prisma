@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Use DIRECT_URL for migrations (optional - only needed for schema migrations)
+  // directUrl = env("DIRECT_URL")
+}
+
+model Feed {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  slug        String   // Feed title slug - unique per user
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  posts       Post[]
+  
+  // Style customization
+  fontFamily          String?  // e.g., "Inter", "Roboto", "Georgia"
+  fontColor           String?  // Hex color for text
+  secondaryTextColor  String?  // Hex color for secondary/muted text
+  cardBgColor         String?  // Hex color for card background
+  cardBorderColor     String?  // Hex color for card border
+  feedBgColor         String?  // Hex color for feed background
+  buttonColor         String?  // Hex color for primary buttons
+  buttonSecondaryColor String?  // Hex color for secondary/outline buttons
+  
+  @@unique([userId, slug])
+  @@index([userId])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  feedId      String
+  feed        Feed     @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  content     String?
+  imageUrl    String?
+  videoUrl    String?
+  type        String   // "text", "image", "video"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([feedId])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  key         String   @unique
+  name        String?  // Optional name for the key
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime?
+  
+  @@index([userId])
+  @@index([key])
+}
+
