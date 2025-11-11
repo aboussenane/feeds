@@ -1,131 +1,91 @@
 # Dev Feeds
 
-A developer-friendly social media platform for creating and hosting feeds with text, image, and video posts.
+Dev Feeds is a modern, open-source RSS/Atom feed management platform designed for developers and technical content creators. It allo
+ws users to manage, aggregate, and distribute feeds through a powerful dashboard and a developer-friendly API. Built with Next.js, TypeScript, and Prisma, Dev Feeds integrates authentication, API key management, and robust access control to ensure a secure and intuitive user experience.
 
 ## Features
 
-- 🔐 User authentication with Supabase
-- 📝 Create feeds with custom titles and descriptions
-- 🖼️ Add posts with text, images, or videos
-- 🔗 Shareable feed links
-- 🔑 API key access for programmatic posting
-- 👤 Profile settings with API documentation
-- 🎨 Simple, clean interface
+- **User Authentication**: Secure user login and registration via Supabase.
+- **Profile Management**: Update account details, manage API keys, and configure user preferences.
+- **API Key Management**: Easily generate, copy, and regenerate API keys to access the Dev Feeds API.
+- **Feed Creation and Management**: Create, edit, and manage multiple custom feeds.
+- **Post Aggregation**: Add posts to feeds for aggregation and distribution.
+- **Developer API**: Programmatic access to user feeds and posts via authenticated endpoints.
+- **Docker Support**: Ready-to-use `docker-compose.yml` for local or production deployment.
+- **Responsive UI**: Clean and modern UI built with shadcn/ui components and TailwindCSS.
+- **Error Handling and Health Checks**: Robust error handling in API endpoints and integrated Docker health checks.
+
+## How It Works
+
+1. **Sign Up / Sign In:**
+   - Authenticate using your email with Supabase.
+2. **Profile Dashboard:**
+   - Manage your personal information and view your unique API key for accessing the developer API.
+   - Regenerate your key at any time—old keys are immediately invalidated for improved security.
+3. **Manage Feeds:**
+   - Create and organize custom feeds.
+   - Add, edit, or remove posts within your feeds.
+4. **API Access:**
+   - Use your API key to interact programmatically with the Dev Feeds backend.
+   - Secure endpoints verify API key validity and usage timestamps.
+5. **Deployment:**
+   - Easily deploy locally or to production using Docker. Environment variables and health checks make configuration simple and reliable.
+
+## Technologies Used
+
+- **Next.js (App Router)** – frontend and API routes
+- **TypeScript** – static typing for safer code
+- **Prisma** – ORM for database access
+- **Supabase** – authentication and user management
+- **PostgreSQL** – primary data storage
+- **shadcn/ui** – reusable, styled React components
+- **Docker** – containerization and deployment
+- **Lucide Icons** – rich, scalable icons for enhanced UI/UX
 
 ## Getting Started
 
-### Prerequisites
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/your-org/dev-feeds.git
+   cd dev-feeds
+   ```
 
-- Node.js 20+ 
-- npm or yarn
-- Supabase account and project
+2. **Set up environment variables:**  
+   Copy `.env.example` to `.env` and supply the appropriate values for Supabase and your database.
 
-### Installation
+3. **Run with Docker (recommended):**
+   ```sh
+   docker-compose up --build
+   ```
+   The app will be available at [http://localhost:3000](http://localhost:3000).
 
-1. Install dependencies:
-```bash
-npm install
-```
+4. **Manual Development Setup:**  
+   Install dependencies with `npm install`, set required env vars, then run:
+   ```sh
+   npm run dev
+   ```
 
-2. Set up environment variables:
-Create a `.env.local` file with:
-```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-DATABASE_URL=your_supabase_postgres_connection_string
-```
+## API Overview
 
-3. Set up the database:
-```bash
-npm run db:push
-```
+- **Authentication:** All API requests require a valid API key.
+- **Endpoints:**
+    - `/api/api-key`: Regenerate and retrieve the current user's API key (via POST).
+    - Additional endpoints for feeds and posts management are available via the developer documentation.
+- **Usage:**  
+  Send your API key as a Bearer token or through designated headers for secure access.
 
-4. Generate Prisma client:
-```bash
-npm run db:generate
-```
+## Security
 
-5. Set up Supabase Storage:
-   - Go to your Supabase dashboard → Storage
-   - Create a new bucket named `feed-uploads`
-   - Make it **public** (enable public access)
-   - See `SUPABASE_STORAGE_SETUP.md` for detailed instructions
+- API keys are unique per user; old keys are invalidated upon regeneration.
+- Key usage updates last-used timestamps for monitoring and analytics.
+- Sensitive endpoints require authentication and are protected against unauthorized access.
 
-6. Run the development server:
-```bash
-npm run dev
-```
+## Contributing
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Contributions, bug reports, and feature requests are welcome! Please open an issue or pull request on GitHub.
 
-## Docker Deployment
+---
 
-To run the application in Docker:
+**Dev Feeds** aims to streamline digital publishing workflows with a developer-first mindset. Whether you're syndicating your blog or building an RSS-powered service, Dev Feeds offers the reliability and APIs you need.
 
-1. **Create a `.env` file** (copy from `.env.example` and fill in your values)
-
-2. **Build and run with Docker Compose**:
-```bash
-docker-compose up -d
-```
-
-3. **Access the application** at http://localhost:3000
-
-See [DOCKER.md](./DOCKER.md) for detailed Docker setup instructions.
-
-## Project Structure
-
-- `app/` - Next.js app router pages and API routes
-- `components/` - React components
-- `lib/` - Utility functions, Prisma client, and Supabase clients
-- `prisma/` - Database schema
-- `context/` - React context providers (auth)
-
-**Note**: 
-- Files ≤50MB are stored in Supabase Storage
-- Files >50MB are stored locally in `public/uploads/` (organized by user ID)
-
-## Usage
-
-1. **Sign Up/Login**: Create an account or login
-2. **Create a Feed**: Click "Create New Feed" on the home page
-3. **Add Posts**: Open your feed and click "Add Post" to create text, image, or video posts
-4. **Share**: Use the share button to copy or share your feed link
-5. **API Access**: Visit your profile page to get your API key and documentation
-
-## API Usage
-
-### Creating Posts via API
-
-```bash
-curl -X POST http://localhost:3000/api/posts \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feedId": "your-feed-id",
-    "type": "text",
-    "content": "Hello from API!"
-  }'
-```
-
-### Creating Feeds via API
-
-```bash
-curl -X POST http://localhost:3000/api/feeds \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "My Feed",
-    "description": "A cool feed"
-  }'
-```
-
-## Tech Stack
-
-- Next.js 15
-- TypeScript
-- Supabase (Auth & Database)
-- Prisma (PostgreSQL)
-- Tailwind CSS
-- shadcn/ui components
 
