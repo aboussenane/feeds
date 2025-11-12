@@ -8,8 +8,8 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  // Use DIRECT_URL for migrations (optional - only needed for schema migrations)
-  // directUrl = env("DIRECT_URL")
+  // Use DIRECT_URL for migrations (required for schema migrations with connection pooler)
+  directUrl = env("DIRECT_URL")
 }
 
 model Feed {
@@ -18,6 +18,7 @@ model Feed {
   description String?
   slug        String   // Feed title slug - unique per user
   userId      String
+  user        User?    @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   posts       Post[]
@@ -43,11 +44,25 @@ model Post {
   content     String?
   imageUrl    String?
   videoUrl    String?
-  type        String   // "text", "image", "video"
+  url         String?  // URL for "url" type posts
+  type        String   // "text", "image", "video", "url"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   @@index([feedId])
+}
+
+model User {
+  id                String   @id // Supabase user ID
+  username          String?  @unique
+  lastUsernameChange DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  feeds             Feed[]
+  apiKey            ApiKey?
+  
+  @@index([username])
 }
 
 model ApiKey {
@@ -57,6 +72,7 @@ model ApiKey {
   name        String?  // Optional name for the key
   createdAt   DateTime @default(now())
   lastUsedAt  DateTime?
+  user        User?    @relation(fields: [userId], references: [id])
   
   @@index([userId])
   @@index([key])

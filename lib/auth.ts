@@ -77,3 +77,90 @@ export async function regenerateApiKey(userId: string) {
   return apiKey
 }
 
+/**
+ * Get or create a user record in the database
+ */
+export async function getOrCreateUser(userId: string) {
+  let user = await (prisma as any).user.findUnique({
+    where: { id: userId },
+  })
+
+  if (!user) {
+    user = await (prisma as any).user.create({
+      data: {
+        id: userId,
+      },
+    })
+  }
+
+  return user
+}
+
+/**
+ * Get user by username (case-insensitive)
+ * Usernames are stored in lowercase, so we normalize the input
+ */
+export async function getUserByUsername(username: string) {
+  // Normalize to lowercase for lookup (usernames are stored in lowercase)
+  const normalizedUsername = username.toLowerCase()
+  
+  // Direct lookup since usernames are stored in lowercase
+  return await (prisma as any).user.findUnique({
+    where: { username: normalizedUsername },
+    include: {
+      feeds: {
+        include: {
+          posts: {
+            orderBy: { createdAt: "desc" },
+          },
+        },
+      },
+    },
+  })
+}
+
+/**
+ * Update username with 7-day cooldown validation
+ */
+export async function updateUsername(userId: string, newUsername: string) {
+  // Validate username format
+  if (!/^[a-zA-Z0-9_-]{3,20}$/.test(newUsername)) {
+    throw new Error('Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens')
+  }
+
+  // Normalize to lowercase
+  const normalizedUsername = newUsername.toLowerCase()
+
+  // Get current user
+  const user = await getOrCreateUser(userId)
+
+  // Check if username is already taken (usernames are stored in lowercase)
+  const existingUser = await (prisma as any).user.findUnique({
+    where: { username: normalizedUsername },
+  })
+
+  if (existingUser && existingUser.id !== userId) {
+    throw new Error('Username is already taken')
+  }
+
+  // Check 7-day cooldown
+  if (user.lastUsernameChange) {
+    const daysSinceChange = (Date.now() - new Date(user.lastUsernameChange).getTime()) / (1000 * 60 * 60 * 24)
+    if (daysSinceChange < 7) {
+      const daysRemaining = Math.ceil(7 - daysSinceChange)
+      throw new Error(`You can only change your username once every 7 days. Please try again in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}.`)
+    }
+  }
+
+  // Update username (store in lowercase)
+  const updatedUser = await (prisma as any).user.update({
+    where: { id: userId },
+    data: {
+      username: normalizedUsername,
+      lastUsernameChange: new Date(),
+    },
+  })
+
+  return updatedUser
+}
+

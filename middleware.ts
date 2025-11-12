@@ -9,11 +9,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow public access to feed viewing pages (userId/feedTitle format)
+  // Allow public access to feed viewing pages (username/feedTitle format)
   if (
     pathname.startsWith('/feeds/') && 
     !pathname.startsWith('/feeds/new') &&
-    pathname.split('/').length === 4 // /feeds/[userId]/[feedTitle]
+    pathname.split('/').length === 4 // /feeds/[username]/[feedTitle]
   ) {
     return NextResponse.next()
   }

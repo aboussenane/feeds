@@ -138,7 +138,7 @@ export function FeedView({
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <section className="space-y-4" aria-label="Feed posts">
           {posts.map((post) => (
             <PostCard 
               key={post.id} 
@@ -153,7 +153,7 @@ export function FeedView({
               }}
             />
           ))}
-        </div>
+        </section>
       )}
 
       {isOwner && (

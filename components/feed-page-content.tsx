@@ -36,13 +36,13 @@ type FeedStyles = {
 export function FeedPageContent({
   feed,
   feedStyles,
-  userId,
+  username,
   feedTitle,
   isOwner,
 }: {
   feed: FeedWithPosts
   feedStyles: FeedStyles
-  userId: string
+  username: string
   feedTitle: string
   isOwner: boolean
 }) {
@@ -84,11 +84,29 @@ export function FeedPageContent({
                   className="text-sm mt-2"
                   style={{ color: feedStyles.secondaryTextColor || undefined }}
                 >
-                  /feeds/{userId}/{feedTitle}
+                  /feeds/{username}/{feedTitle}
                 </p>
+                <div className="flex gap-4 mt-2">
+                  <a
+                    href={`/feeds/${username}/${feedTitle}/rss`}
+                    className="text-xs hover:underline"
+                    style={{ color: feedStyles.secondaryTextColor || undefined }}
+                    title="RSS Feed"
+                  >
+                    RSS
+                  </a>
+                  <a
+                    href={`/feeds/${username}/${feedTitle}/json`}
+                    className="text-xs hover:underline"
+                    style={{ color: feedStyles.secondaryTextColor || undefined }}
+                    title="JSON Feed"
+                  >
+                    JSON
+                  </a>
+                </div>
               </div>
               <ShareButton 
-                userId={userId} 
+                username={username} 
                 feedTitle={feedTitle}
                 buttonSecondaryColor={feedStyles.buttonSecondaryColor}
                 fontColor={feedStyles.fontColor}

@@ -4,20 +4,22 @@ import { Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 type ShareButtonProps = {
-  userId: string
+  username: string
   feedTitle: string
   buttonSecondaryColor?: string | null
   fontColor?: string | null
 }
 
 export function ShareButton({ 
-  userId, 
+  username, 
   feedTitle,
   buttonSecondaryColor,
   fontColor
 }: ShareButtonProps) {
   const handleShare = async () => {
-    const url = `${window.location.origin}/feeds/${userId}/${feedTitle}`
+    // Ensure username is lowercase in URL
+    const normalizedUsername = username.toLowerCase()
+    const url = `${window.location.origin}/feeds/${normalizedUsername}/${feedTitle}`
     
     if (navigator.share) {
       try {

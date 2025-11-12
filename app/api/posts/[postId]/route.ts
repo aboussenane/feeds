@@ -17,7 +17,7 @@ export async function PATCH(
 
     const { postId } = await params;
     const body = await request.json();
-    const { content, imageUrl, videoUrl, type } = body;
+    const { content, imageUrl, videoUrl, url, type } = body;
 
     // Get the post and verify ownership through feed
     const post = await prisma.post.findUnique({
@@ -41,9 +41,9 @@ export async function PATCH(
     }
 
     // Validate type if provided
-    if (type && !["text", "image", "video"].includes(type)) {
+    if (type && !["text", "image", "video", "url"].includes(type)) {
       return NextResponse.json(
-        { error: "Type must be 'text', 'image', or 'video'" },
+        { error: "Type must be 'text', 'image', 'video', or 'url'" },
         { status: 400 }
       );
     }
@@ -71,6 +71,31 @@ export async function PATCH(
       );
     }
 
+    if (postType === "url" && !url && !(post as any).url) {
+      return NextResponse.json(
+        { error: "URL is required for URL posts" },
+        { status: 400 }
+      );
+    }
+
+    // Validate URL format for URL posts
+    if (postType === "url" && url) {
+      try {
+        const urlObj = new URL(url);
+        if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+          return NextResponse.json(
+            { error: "URL must start with http:// or https://" },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid URL format" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update the post
     const updatedPost = await prisma.post.update({
       where: { id: postId },
@@ -78,8 +103,9 @@ export async function PATCH(
         content: content !== undefined ? content : post.content,
         imageUrl: imageUrl !== undefined ? imageUrl : post.imageUrl,
         videoUrl: videoUrl !== undefined ? videoUrl : post.videoUrl,
+        url: url !== undefined ? url : (post as any).url,
         type: type || post.type,
-      },
+      } as any,
     });
 
     return NextResponse.json(updatedPost);

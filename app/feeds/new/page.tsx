@@ -37,7 +37,10 @@ export default function NewFeedPage() {
       }
 
       const feed = await response.json()
-      router.push(`/feeds/${feed.userId}/${feed.slug}`)
+      // Use username if available, fallback to userId, normalize to lowercase
+      const username = feed.username || feed.userId
+      const normalizedUsername = username ? username.toLowerCase() : username
+      router.push(`/feeds/${normalizedUsername}/${feed.slug}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
       setLoading(false)

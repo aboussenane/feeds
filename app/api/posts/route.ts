@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { feedId, content, imageUrl, videoUrl, type } = body;
+    const { feedId, content, imageUrl, videoUrl, url, type } = body;
 
     if (!feedId || !type) {
       return NextResponse.json(
@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate type
-    if (!["text", "image", "video"].includes(type)) {
+    if (!["text", "image", "video", "url"].includes(type)) {
       return NextResponse.json(
-        { error: "Type must be 'text', 'image', or 'video'" },
+        { error: "Type must be 'text', 'image', 'video', or 'url'" },
         { status: 400 }
       );
     }
@@ -52,6 +52,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (type === "url" && !url) {
+      return NextResponse.json(
+        { error: "URL is required for URL posts" },
+        { status: 400 }
+      );
+    }
+
+    // Validate URL format for URL posts
+    if (type === "url" && url) {
+      try {
+        const urlObj = new URL(url);
+        if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") {
+          return NextResponse.json(
+            { error: "URL must start with http:// or https://" },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid URL format" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Verify feed exists and belongs to user
     const feed = await prisma.feed.findUnique({ where: { id: feedId } });
     if (!feed) {
@@ -74,6 +99,7 @@ export async function POST(request: NextRequest) {
         content: content || null,
         imageUrl: imageUrl || null,
         videoUrl: videoUrl || null,
+        url: url || null,
         type,
       },
     });

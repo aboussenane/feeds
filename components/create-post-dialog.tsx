@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { X } from "lucide-react"
+import { isValidUrl } from "@/lib/url-embed"
 
 type CreatePostDialogProps = {
   feedId: string
@@ -29,8 +30,9 @@ export function CreatePostDialog({
   onOpenChange,
   onPostCreated,
 }: CreatePostDialogProps) {
-  const [type, setType] = useState<"text" | "image" | "video">("text")
+  const [type, setType] = useState<"text" | "image" | "video" | "url">("text")
   const [content, setContent] = useState("")
+  const [url, setUrl] = useState("") // URL for URL type posts
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -40,9 +42,31 @@ export function CreatePostDialog({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState<string>("")
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: "image" | "video") => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Check file size before processing
+    if (file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(2)
+      setError(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of 50MB. Please choose a smaller file.`)
+      // Reset the input
+      e.target.value = ""
+      // Clear any previews
+      if (fileType === "image") {
+        setImageFile(null)
+        setImagePreview(null)
+      } else {
+        setVideoFile(null)
+        setVideoPreview(null)
+      }
+      return
+    }
+
+    // Clear any previous errors
+    setError("")
 
     if (fileType === "image") {
       setImageFile(file)
@@ -120,6 +144,20 @@ export function CreatePostDialog({
     setUploadStatus("")
 
     try {
+      // Validate URL for URL posts
+      if (type === "url") {
+        if (!url) {
+          setError("URL is required")
+          setLoading(false)
+          return
+        }
+        if (!isValidUrl(url)) {
+          setError("Please enter a valid URL (must start with http:// or https://)")
+          setLoading(false)
+          return
+        }
+      }
+
       let imageUrl: string | null = null
       let videoUrl: string | null = null
 
@@ -140,7 +178,8 @@ export function CreatePostDialog({
         },
         body: JSON.stringify({
           feedId,
-          content: content || null,
+          content: type === "url" ? (content || null) : (content || null),
+          url: type === "url" ? url : null,
           imageUrl,
           videoUrl,
           type,
@@ -157,6 +196,7 @@ export function CreatePostDialog({
 
       // Reset form
       setContent("")
+      setUrl("")
       setImageFile(null)
       setVideoFile(null)
       setImagePreview(null)
@@ -179,6 +219,7 @@ export function CreatePostDialog({
       // Reset form when closing
       setTimeout(() => {
         setContent("")
+        setUrl("")
         setImageFile(null)
         setVideoFile(null)
         setImagePreview(null)
@@ -227,6 +268,14 @@ export function CreatePostDialog({
               >
                 Video
               </Button>
+              <Button
+                type="button"
+                variant={type === "url" ? "default" : "outline"}
+                onClick={() => setType("url")}
+                size="sm"
+              >
+                URL
+              </Button>
             </div>
           </div>
 
@@ -247,6 +296,9 @@ export function CreatePostDialog({
           {type === "image" && (
             <div className="space-y-2">
               <Label htmlFor="image">Image *</Label>
+              <p className="text-xs text-muted-foreground">
+                Maximum file size: 50MB
+              </p>
               <div className="space-y-2">
                 <Input
                   id="image"
@@ -293,6 +345,9 @@ export function CreatePostDialog({
           {type === "video" && (
             <div className="space-y-2">
               <Label htmlFor="video">Video *</Label>
+              <p className="text-xs text-muted-foreground">
+                Maximum file size: 50MB
+              </p>
               <div className="space-y-2">
                 <Input
                   id="video"
@@ -327,6 +382,33 @@ export function CreatePostDialog({
                 <Label htmlFor="video-content">Caption (optional)</Label>
                 <Textarea
                   id="video-content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Add a caption..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {type === "url" && (
+            <div className="space-y-2">
+              <Label htmlFor="url">URL *</Label>
+              <p className="text-xs text-muted-foreground">
+                Paste a URL to embed (YouTube, images, videos, or any link)
+              </p>
+              <Input
+                id="url"
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                required
+              />
+              <div className="space-y-2">
+                <Label htmlFor="url-content">Caption (optional)</Label>
+                <Textarea
+                  id="url-content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Add a caption..."

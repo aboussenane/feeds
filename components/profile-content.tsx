@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Copy, Check, Eye, EyeOff, LogOut, Key, Code } from "lucide-react"
+import { Copy, Check, Eye, EyeOff, LogOut, Key, Code, Loader2, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 type Feed = {
   id: string
@@ -22,10 +23,12 @@ type Feed = {
 
 export function ProfileContent({
   user,
+  dbUser,
   apiKey,
   feeds,
 }: {
   user: { id: string; email?: string }
+  dbUser: { id: string; username: string | null; lastUsernameChange: Date | null }
   apiKey: string
   feeds: Feed[]
 }) {
@@ -36,7 +39,88 @@ export function ProfileContent({
   const [developerMode, setDeveloperMode] = useState(false)
   const [currentApiKey, setCurrentApiKey] = useState(apiKey)
   const [regenerating, setRegenerating] = useState(false)
+  const [username, setUsername] = useState(dbUser.username || "")
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState("")
+  const [usernameLoading, setUsernameLoading] = useState(false)
+  const [checkingUsername, setCheckingUsername] = useState(false)
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
+  const [deletingFeed, setDeletingFeed] = useState<Feed | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [deleting, setDeleting] = useState(false)
   const baseUrl = typeof window !== "undefined" ? window.location.origin : ""
+
+  // Calculate days until username can be changed again
+  const getDaysUntilChange = () => {
+    if (!dbUser.lastUsernameChange) return 0
+    const daysSinceChange = (Date.now() - new Date(dbUser.lastUsernameChange).getTime()) / (1000 * 60 * 60 * 24)
+    return Math.max(0, Math.ceil(7 - daysSinceChange))
+  }
+
+  const daysUntilChange = getDaysUntilChange()
+  const canChangeUsername = daysUntilChange === 0
+
+  // Sync username state when dbUser changes
+  useEffect(() => {
+    if (!editingUsername) {
+      setUsername(dbUser.username || "")
+      setUsernameAvailable(null)
+      setUsernameError("")
+    }
+  }, [dbUser.username, editingUsername])
+
+  // Check username availability as user types (debounced)
+  useEffect(() => {
+    if (!editingUsername || !username.trim()) {
+      setUsernameAvailable(null)
+      setUsernameError("")
+      return
+    }
+
+    // Don't check if it's the current username (case-insensitive comparison)
+    if (username.toLowerCase() === (dbUser.username || "").toLowerCase()) {
+      setUsernameAvailable(true)
+      setUsernameError("")
+      return
+    }
+
+    // Validate format first
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
+      setUsernameAvailable(false)
+      setUsernameError("Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens")
+      return
+    }
+
+    // Debounce the API call
+    const timeoutId = setTimeout(async () => {
+      setCheckingUsername(true)
+      setUsernameError("")
+      
+      try {
+        const response = await fetch(`/api/username?username=${encodeURIComponent(username)}`)
+        const data = await response.json()
+        
+        if (data.available) {
+          setUsernameAvailable(true)
+          setUsernameError("")
+        } else {
+          setUsernameAvailable(false)
+          if (data.reason === "invalid_format") {
+            setUsernameError("Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens")
+          } else {
+            setUsernameError("Username is already taken")
+          }
+        }
+      } catch (error) {
+        // Silently fail - don't show error for network issues during typing
+        setUsernameAvailable(null)
+      } finally {
+        setCheckingUsername(false)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [username, editingUsername, dbUser.username])
 
   const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text)
@@ -47,6 +131,37 @@ export function ProfileContent({
   const handleSignOut = async () => {
     await signOut()
     router.push("/login")
+  }
+
+  const handleDeleteFeed = async () => {
+    if (!deletingFeed) return
+
+    // Verify the user typed the correct feed name
+    if (deleteConfirmText !== deletingFeed.title) {
+      return
+    }
+
+    setDeleting(true)
+    try {
+      const response = await fetch(`/api/feeds/delete/${deletingFeed.id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to delete feed")
+      }
+
+      // Refresh the page to update the feeds list
+      router.refresh()
+      setDeletingFeed(null)
+      setDeleteConfirmText("")
+    } catch (error) {
+      console.error("Error deleting feed:", error)
+      alert(error instanceof Error ? error.message : "Failed to delete feed. Please try again.")
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const handleRegenerateApiKey = async () => {
@@ -74,6 +189,61 @@ export function ProfileContent({
       alert("Failed to regenerate API key. Please try again.")
     } finally {
       setRegenerating(false)
+    }
+  }
+
+  const handleUpdateUsername = async () => {
+    if (!username.trim()) {
+      setUsernameError("Username is required")
+      return
+    }
+
+    if (!/^[a-zA-Z0-9_-]{3,20}$/.test(username)) {
+      setUsernameError("Username must be 3-20 characters and contain only letters, numbers, underscores, and hyphens")
+      return
+    }
+
+    // Check availability one more time before submitting (case-insensitive comparison)
+    if (username.toLowerCase() !== (dbUser.username || "").toLowerCase()) {
+      try {
+        const checkResponse = await fetch(`/api/username?username=${encodeURIComponent(username)}`)
+        const checkData = await checkResponse.json()
+        
+        if (!checkData.available) {
+          setUsernameError("Username is already taken")
+          return
+        }
+      } catch (error) {
+        setUsernameError("Failed to verify username availability. Please try again.")
+        return
+      }
+    }
+
+    setUsernameLoading(true)
+    setUsernameError("")
+
+    try {
+      const response = await fetch("/api/username", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to update username")
+      }
+
+      const data = await response.json()
+      setUsername(data.username)
+      setEditingUsername(false)
+      router.refresh()
+    } catch (error) {
+      setUsernameError(error instanceof Error ? error.message : "Failed to update username")
+    } finally {
+      setUsernameLoading(false)
     }
   }
 
@@ -197,7 +367,7 @@ export function ProfileContent({
   }'`}
                 </pre>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Returns: Created feed object with id, slug, and other fields. Feed URL: /feeds/[userId]/[slug]
+                  Returns: Created feed object with id, slug, and other fields. Feed URL: /feeds/[username]/[slug]
                 </p>
               </div>
 
@@ -212,6 +382,9 @@ export function ProfileContent({
   -H "Authorization: Bearer ${currentApiKey}" \\
   -F "file=@/path/to/image.jpg"`}
                 </pre>
+                <p className="text-xs text-muted-foreground mt-1">
+                  <strong>File size limit:</strong> Maximum 50MB for images and videos
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Returns: {"{ \"url\": \"https://...\" }"}
                 </p>
@@ -370,6 +543,49 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
                 </p>
               </div>
 
+              {/* Create Post - URL */}
+              <div>
+                <p className="text-muted-foreground mb-2 text-xs font-semibold">Create URL Post:</p>
+                <code className="text-xs bg-background p-2 rounded block mb-2">
+                  POST {baseUrl}/api/posts
+                </code>
+                <pre className="text-xs bg-background p-2 rounded block overflow-x-auto">
+{`curl -X POST ${baseUrl}/api/posts \\
+  -H "Authorization: Bearer ${currentApiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "feedId": "your-feed-id",
+    "type": "url",
+    "url": "https://www.youtube.com/watch?v=...",
+    "content": "Optional caption"
+  }'`}
+                </pre>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Supports YouTube videos, images, videos, and any URL. The system will automatically detect and embed the content. Use "url" for the URL and "content" for an optional caption.
+                </p>
+              </div>
+
+              {/* Edit Post - URL */}
+              <div>
+                <p className="text-muted-foreground mb-2 text-xs font-semibold">Update URL Post:</p>
+                <code className="text-xs bg-background p-2 rounded block mb-2">
+                  PATCH {baseUrl}/api/posts/[postId]
+                </code>
+                <pre className="text-xs bg-background p-2 rounded block overflow-x-auto">
+{`curl -X PATCH ${baseUrl}/api/posts/your-post-id \\
+  -H "Authorization: Bearer ${currentApiKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "url": "https://www.youtube.com/watch?v=...",
+    "content": "Updated caption",
+    "type": "url"
+  }'`}
+                </pre>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Note: Omit url to keep existing URL, omit content to keep existing caption.
+                </p>
+              </div>
+
               {/* Delete Post */}
               <div>
                 <p className="text-muted-foreground mb-2 text-xs font-semibold">Delete Post:</p>
@@ -403,10 +619,96 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-4">
           <div>
             <Label>Email</Label>
             <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+          <div>
+            <Label>Username</Label>
+            {editingUsername ? (
+              <div className="space-y-2 mt-2">
+                <div className="relative">
+                  <Input
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value)
+                      setUsernameError("")
+                      setUsernameAvailable(null)
+                    }}
+                    placeholder="Enter username"
+                    disabled={usernameLoading}
+                    className={usernameError ? "border-destructive" : usernameAvailable === true ? "border-green-500" : ""}
+                  />
+                  {username.trim() && username.toLowerCase() !== (dbUser.username || "").toLowerCase() && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {checkingUsername ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : usernameAvailable === true ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : usernameAvailable === false ? (
+                        <span className="text-destructive text-sm">✕</span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+                {usernameError && (
+                  <p className="text-sm text-destructive">{usernameError}</p>
+                )}
+                {!usernameError && username.trim() && username.toLowerCase() !== (dbUser.username || "").toLowerCase() && usernameAvailable === true && (
+                  <p className="text-sm text-green-600">Username is available</p>
+                )}
+                {!canChangeUsername && (
+                  <p className="text-xs text-muted-foreground">
+                    You can only change your username once every 7 days. Please try again in {daysUntilChange} day{daysUntilChange === 1 ? "" : "s"}.
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleUpdateUsername}
+                    disabled={usernameLoading || !canChangeUsername || checkingUsername || (usernameAvailable === false && username !== dbUser.username)}
+                  >
+                    {usernameLoading ? "Saving..." : "Save"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingUsername(false)
+                      setUsername(dbUser.username || "")
+                      setUsernameError("")
+                      setUsernameAvailable(null)
+                    }}
+                    disabled={usernameLoading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 mt-2">
+                <p className="text-sm font-mono text-muted-foreground">
+                  {dbUser.username || "Not set"}
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingUsername(true)}
+                  disabled={!canChangeUsername}
+                >
+                  {dbUser.username ? "Edit" : "Set Username"}
+                </Button>
+                {!canChangeUsername && (
+                  <p className="text-xs text-muted-foreground">
+                    You can change your username again in {daysUntilChange} day{daysUntilChange === 1 ? "" : "s"}.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <Label>User ID</Label>
@@ -474,7 +776,7 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
                             <div>
                               <Label className="text-xs text-muted-foreground">URL</Label>
                               <p className="text-sm text-muted-foreground mt-0.5">
-                                /feeds/{user.id}/{feed.slug}
+                                /feeds/{(dbUser.username || user.id)?.toLowerCase()}/{feed.slug}
                               </p>
                             </div>
                             <div>
@@ -485,11 +787,22 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
                             </div>
                           </div>
                         </div>
-                        <Link href={`/feeds/${user.id}/${feed.slug}`}>
-                          <Button variant="outline" size="sm">
-                            View Feed
+                        <div className="flex gap-2">
+                          <Link href={`/feeds/${(dbUser.username || user.id)?.toLowerCase()}/${feed.slug}`}>
+                            <Button variant="outline" size="sm">
+                              View Feed
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeletingFeed(feed)}
+                            className="gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
                           </Button>
-                        </Link>
+                        </div>
                       </div>
                     </div>
                   ) : (
@@ -498,14 +811,25 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{feed.title}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {feed._count.posts} post{feed._count.posts === 1 ? "" : "s"} • /feeds/{user.id}/{feed.slug}
+                          {feed._count.posts} post{feed._count.posts === 1 ? "" : "s"} • /feeds/{(dbUser.username || user.id)?.toLowerCase()}/{feed.slug}
                         </p>
                       </div>
-                      <Link href={`/feeds/${user.id}/${feed.slug}`}>
-                        <Button variant="outline" size="sm">
-                          View Feed
+                      <div className="flex gap-2">
+                        <Link href={`/feeds/${(dbUser.username || user.id)?.toLowerCase()}/${feed.slug}`}>
+                          <Button variant="outline" size="sm">
+                            View Feed
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setDeletingFeed(feed)}
+                          className="gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
                         </Button>
-                      </Link>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -524,6 +848,52 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
           </Button>
         </CardContent>
       </Card>
+
+      {/* Delete Feed Confirmation Dialog */}
+      <Dialog open={!!deletingFeed} onOpenChange={(open) => !open && setDeletingFeed(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Feed</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the feed and all its posts.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="delete-confirm">
+                Type <strong>{deletingFeed?.title}</strong> to confirm deletion:
+              </Label>
+              <Input
+                id="delete-confirm"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={deletingFeed?.title}
+                disabled={deleting}
+                className="mt-2"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeletingFeed(null)
+                setDeleteConfirmText("")
+              }}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteFeed}
+              disabled={deleting || deleteConfirmText !== deletingFeed?.title}
+            >
+              {deleting ? "Deleting..." : "Delete Feed"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -52,6 +52,9 @@ ws users to manage, aggregate, and distribute feeds through a powerful dashboard
 
 2. **Set up environment variables:**  
    Copy `.env.example` to `.env` and supply the appropriate values for Supabase and your database.
+   
+   **Required for SEO:**
+   - `NEXT_PUBLIC_SITE_URL`: Your site's public URL (e.g., `https://yourdomain.com`). This is used for generating sitemaps, Open Graph tags, and canonical URLs. If not set, defaults to `http://localhost:3000`.
 
 3. **Run with Docker (recommended):**
    ```sh
@@ -73,6 +76,21 @@ ws users to manage, aggregate, and distribute feeds through a powerful dashboard
     - Additional endpoints for feeds and posts management are available via the developer documentation.
 - **Usage:**  
   Send your API key as a Bearer token or through designated headers for secure access.
+
+## SEO Optimization
+
+The application includes comprehensive SEO optimizations:
+
+- **Meta Tags**: Enhanced metadata with Open Graph and Twitter Card support
+- **Dynamic Metadata**: Feed pages automatically generate SEO-friendly metadata based on content
+- **Structured Data**: JSON-LD schema markup for Blog and BlogPosting types
+- **Sitemap**: Dynamic sitemap generation at `/sitemap.xml` (includes all public feeds)
+- **Robots.txt**: Configured at `/robots.txt` to guide search engine crawlers
+- **Semantic HTML**: Proper use of `<article>`, `<section>`, and `<time>` tags
+- **Canonical URLs**: Prevents duplicate content issues
+- **Image Alt Text**: All images include descriptive alt attributes
+
+**Note**: Set `NEXT_PUBLIC_SITE_URL` in your environment variables for production to ensure correct URLs in sitemaps and meta tags.
 
 ## Security
 

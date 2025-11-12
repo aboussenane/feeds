@@ -72,7 +72,7 @@ export function FeedStyleEditor({
     setError("")
 
     try {
-      const response = await fetch(`/api/feeds/${feedId}/styles`, {
+      const response = await fetch(`/api/feeds/styles/${feedId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

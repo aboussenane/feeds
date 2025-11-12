@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getCurrentUser, getOrCreateApiKey } from "@/lib/auth"
+import { getCurrentUser, getOrCreateApiKey, getOrCreateUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { ProfileContent } from "@/components/profile-content"
 import Link from "next/link"
@@ -12,6 +12,7 @@ export default async function ProfilePage() {
     redirect("/login")
   }
 
+  const dbUser = await getOrCreateUser(user.id)
   const apiKey = await getOrCreateApiKey(user.id)
   const feeds = await prisma.feed.findMany({
     where: { userId: user.id },
@@ -32,7 +33,12 @@ export default async function ProfilePage() {
             Back to home
           </Link>
 
-          <ProfileContent user={user} apiKey={apiKey.key} feeds={feeds} />
+          <ProfileContent 
+            user={user} 
+            dbUser={dbUser}
+            apiKey={apiKey.key} 
+            feeds={feeds} 
+          />
         </div>
       </div>
     </div>

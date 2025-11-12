@@ -110,9 +110,20 @@ export async function POST(request: NextRequest) {
         slug,
         userId: auth.userId,
       },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json(feed, { status: 201 });
+    // Include username in response for redirect
+    return NextResponse.json({
+      ...feed,
+      username: (feed as any).user?.username || null,
+    }, { status: 201 });
   } catch (error) {
     console.error("Error creating feed:", error);
     return NextResponse.json(

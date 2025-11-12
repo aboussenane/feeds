@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { X } from "lucide-react"
+import { isValidUrl } from "@/lib/url-embed"
 
 type EditPostDialogProps = {
   post: Post
@@ -29,8 +30,9 @@ export function EditPostDialog({
   onOpenChange,
   onPostUpdated,
 }: EditPostDialogProps) {
-  const [type, setType] = useState<"text" | "image" | "video">(post.type as "text" | "image" | "video")
+  const [type, setType] = useState<"text" | "image" | "video" | "url">(post.type as "text" | "image" | "video" | "url")
   const [content, setContent] = useState(post.content || "")
+  const [url, setUrl] = useState((post as any).url || "") // URL for URL type posts
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(post.imageUrl)
@@ -40,11 +42,14 @@ export function EditPostDialog({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState<string>("")
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
   // Reset form when post changes or dialog opens
   useEffect(() => {
     if (open && post) {
-      setType(post.type as "text" | "image" | "video")
+      setType(post.type as "text" | "image" | "video" | "url")
       setContent(post.content || "")
+      setUrl((post as any).url || "")
       setImagePreview(post.imageUrl)
       setVideoPreview(post.videoUrl)
       setImageFile(null)
@@ -58,6 +63,26 @@ export function EditPostDialog({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: "image" | "video") => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Check file size before processing
+    if (file.size > MAX_FILE_SIZE) {
+      const fileSizeMB = (file.size / 1024 / 1024).toFixed(2)
+      setError(`File size (${fileSizeMB}MB) exceeds the maximum allowed size of 50MB. Please choose a smaller file.`)
+      // Reset the input
+      e.target.value = ""
+      // Clear any previews
+      if (fileType === "image") {
+        setImageFile(null)
+        setImagePreview(post.imageUrl) // Restore original preview
+      } else {
+        setVideoFile(null)
+        setVideoPreview(post.videoUrl) // Restore original preview
+      }
+      return
+    }
+
+    // Clear any previous errors
+    setError("")
 
     if (fileType === "image") {
       setImageFile(file)
@@ -135,6 +160,21 @@ export function EditPostDialog({
     setUploadStatus("")
 
     try {
+      // Validate URL for URL posts
+      if (type === "url") {
+        const urlToValidate = url || (post as any).url
+        if (!urlToValidate) {
+          setError("URL is required")
+          setLoading(false)
+          return
+        }
+        if (url && !isValidUrl(url)) {
+          setError("Please enter a valid URL (must start with http:// or https://)")
+          setLoading(false)
+          return
+        }
+      }
+
       let imageUrl: string | null = post.imageUrl
       let videoUrl: string | null = post.videoUrl
 
@@ -155,6 +195,7 @@ export function EditPostDialog({
         },
         body: JSON.stringify({
           content: content || null,
+          url: type === "url" ? (url || null) : null,
           imageUrl,
           videoUrl,
           type,
@@ -171,6 +212,7 @@ export function EditPostDialog({
 
       // Reset form
       setContent("")
+      setUrl("")
       setImageFile(null)
       setVideoFile(null)
       setImagePreview(null)
@@ -193,11 +235,12 @@ export function EditPostDialog({
       // Reset form when closing
       setTimeout(() => {
         setContent(post.content || "")
+        setUrl((post as any).url || "")
         setImageFile(null)
         setVideoFile(null)
         setImagePreview(post.imageUrl)
         setVideoPreview(post.videoUrl)
-        setType(post.type as "text" | "image" | "video")
+        setType(post.type as "text" | "image" | "video" | "url")
         setError("")
         setUploadProgress(0)
         setUploadStatus("")
@@ -243,6 +286,14 @@ export function EditPostDialog({
               >
                 Video
               </Button>
+              <Button
+                type="button"
+                variant={type === "url" ? "default" : "outline"}
+                onClick={() => setType("url")}
+                size="sm"
+              >
+                URL
+              </Button>
             </div>
           </div>
 
@@ -265,6 +316,9 @@ export function EditPostDialog({
               <Label htmlFor="image">Image {!post.imageUrl && "*"}</Label>
               <p className="text-xs text-muted-foreground">
                 {post.imageUrl ? "Leave empty to keep current image" : "Upload an image"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Maximum file size: 50MB
               </p>
               <div className="space-y-2">
                 <Input
@@ -314,6 +368,9 @@ export function EditPostDialog({
               <p className="text-xs text-muted-foreground">
                 {post.videoUrl ? "Leave empty to keep current video" : "Upload a video"}
               </p>
+              <p className="text-xs text-muted-foreground">
+                Maximum file size: 50MB
+              </p>
               <div className="space-y-2">
                 <Input
                   id="video"
@@ -347,6 +404,32 @@ export function EditPostDialog({
                 <Label htmlFor="video-content">Caption (optional)</Label>
                 <Textarea
                   id="video-content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Add a caption..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
+          {type === "url" && (
+            <div className="space-y-2">
+              <Label htmlFor="url">URL {!(post as any).url && "*"}</Label>
+              <p className="text-xs text-muted-foreground">
+                {(post as any).url ? "Leave empty to keep current URL" : "Paste a URL to embed (YouTube, images, videos, or any link)"}
+              </p>
+              <Input
+                id="url"
+                type="url"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+              <div className="space-y-2">
+                <Label htmlFor="url-content">Caption (optional)</Label>
+                <Textarea
+                  id="url-content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Add a caption..."
