@@ -20,8 +20,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   })
 
   // Generate sitemap entries for feeds
+  type FeedWithUser = { user?: { username: string | null } | null }
   const feedEntries: MetadataRoute.Sitemap = feeds.map((feed) => {
-    const username = (feed as any).user?.username || feed.userId
+    const feedWithUser = feed as FeedWithUser & typeof feed
+    const username = feedWithUser.user?.username || feed.userId
     const normalizedUsername = username ? username.toLowerCase() : username
     return {
       url: `${baseUrl}/feeds/${normalizedUsername}/${feed.slug}`,

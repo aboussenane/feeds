@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import { Code, Key, Book, FileText, Rss, Database } from "lucide-react"
+import { Code, Key, Book, Rss } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "API Documentation",
@@ -180,7 +180,7 @@ Content-Type: application/json
               </h2>
               <div className="prose prose-sm max-w-none">
                 <p>
-                  Public feeds are available in RSS and JSON Feed formats. These endpoints don't require authentication.
+                  Public feeds are available in RSS and JSON Feed formats. These endpoints don&apos;t require authentication.
                 </p>
                 <ul>
                   <li><strong>RSS Feed:</strong> <code>{baseUrl}/feeds/[username]/[feedTitle]/rss</code></li>
@@ -218,7 +218,7 @@ Content-Type: application/json
               <h2 className="text-2xl font-semibold mb-4">Rate Limits</h2>
               <div className="prose prose-sm max-w-none">
                 <p>
-                  Standard rate limits apply to prevent abuse. If you exceed the rate limit, you'll receive a <code>429 Too Many Requests</code> response.
+                  Standard rate limits apply to prevent abuse. If you exceed the rate limit, you&apos;ll receive a <code>429 Too Many Requests</code> response.
                 </p>
               </div>
             </section>

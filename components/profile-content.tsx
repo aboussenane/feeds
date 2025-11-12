@@ -111,7 +111,7 @@ export function ProfileContent({
             setUsernameError("Username is already taken")
           }
         }
-      } catch (error) {
+      } catch {
         // Silently fail - don't show error for network issues during typing
         setUsernameAvailable(null)
       } finally {
@@ -213,7 +213,7 @@ export function ProfileContent({
           setUsernameError("Username is already taken")
           return
         }
-      } catch (error) {
+      } catch {
         setUsernameError("Failed to verify username availability. Please try again.")
         return
       }
@@ -561,7 +561,7 @@ NEW_VIDEO_URL=$(echo $UPLOAD_RESPONSE | jq -r '.url')`}
   }'`}
                 </pre>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supports YouTube videos, images, videos, and any URL. The system will automatically detect and embed the content. Use "url" for the URL and "content" for an optional caption.
+                  Supports YouTube videos, images, videos, and any URL. The system will automatically detect and embed the content. Use &quot;url&quot; for the URL and &quot;content&quot; for an optional caption.
                 </p>
               </div>
 

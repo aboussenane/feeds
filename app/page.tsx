@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import { Plus, Rss } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, getOrCreateUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -19,8 +19,17 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   
   // Only fetch feeds if user is logged in, and only show their own feeds
-  const feeds = user
-    ? await (prisma as any).feed.findMany({
+  type FeedWithUser = { 
+    id: string
+    title: string
+    description: string | null
+    slug: string
+    userId: string
+    user?: { username: string | null } | null 
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const feeds: FeedWithUser[] = user
+    ? await ((prisma as any).feed.findMany({
         where: {
           userId: user.id,
         },
@@ -33,7 +42,7 @@ export default async function HomePage() {
             },
           },
         },
-      })
+      }) as FeedWithUser[])
     : [];
 
   return (
@@ -76,8 +85,9 @@ export default async function HomePage() {
             <div className="mt-16">
               <h2 className="text-2xl font-semibold mb-6">Recent Feeds</h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {feeds.map((feed: any) => {
-                  const username = feed.user?.username || feed.userId;
+                {feeds.map((feed) => {
+                  const feedWithUser = feed as FeedWithUser & typeof feed
+                  const username = feedWithUser.user?.username || feed.userId;
                   // Normalize username to lowercase for URLs
                   const normalizedUsername = username ? username.toLowerCase() : username;
                   return (

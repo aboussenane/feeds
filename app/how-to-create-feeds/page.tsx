@@ -28,15 +28,15 @@ export default function HowToCreateFeedsPage() {
 
               <h2 className="text-2xl font-semibold mt-8 mb-4">Step 1: Sign Up or Log In</h2>
               <p>
-                First, you'll need an account. If you don't have one yet, <Link href="/login" className="text-primary hover:underline">sign up for free</Link>.
+                First, you&apos;ll need an account. If you don&apos;t have one yet, <Link href="/login" className="text-primary hover:underline">sign up for free</Link>.
               </p>
 
               <h2 className="text-2xl font-semibold mt-8 mb-4">Step 2: Create Your First Feed</h2>
               <ol className="list-decimal pl-6 space-y-3">
-                <li>Click the <strong>"Create New Feed"</strong> button on the homepage</li>
-                <li>Enter a title for your feed (e.g., "My Developer Blog")</li>
+                <li>Click the <strong>&quot;Create New Feed&quot;</strong> button on the homepage</li>
+                <li>Enter a title for your feed (e.g., &quot;My Developer Blog&quot;)</li>
                 <li>Optionally add a description</li>
-                <li>Click <strong>"Create Feed"</strong></li>
+                <li>Click <strong>&quot;Create Feed&quot;</strong></li>
               </ol>
               <p className="mt-4">
                 Your feed will be created with a unique URL based on your username and the feed title slug.
@@ -97,7 +97,7 @@ export default function HowToCreateFeedsPage() {
                 <li><strong>Card Styling:</strong> Adjust card backgrounds and borders</li>
               </ul>
               <p className="mt-4">
-                Click the <strong>"Customize Styles"</strong> button on your feed page to access styling options.
+                Click the <strong>&quot;Customize Styles&quot;</strong> button on your feed page to access styling options.
               </p>
 
               <h2 className="text-2xl font-semibold mt-8 mb-4">Step 5: Share Your Feed</h2>

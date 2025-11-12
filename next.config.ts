@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone', // Required for Docker
+  // 'standalone' output is for Docker deployment
+  // Vercel doesn't need this - it handles Next.js deployments automatically
+  // Uncomment below if deploying to Docker, otherwise leave commented for Vercel
+  // output: 'standalone',
   images: {
     remotePatterns: [
       {

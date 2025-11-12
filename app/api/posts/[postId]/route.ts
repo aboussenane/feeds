@@ -71,7 +71,9 @@ export async function PATCH(
       );
     }
 
-    if (postType === "url" && !url && !(post as any).url) {
+    type PostWithUrl = typeof post & { url?: string | null }
+    const postWithUrl = post as PostWithUrl
+    if (postType === "url" && !url && !postWithUrl.url) {
       return NextResponse.json(
         { error: "URL is required for URL posts" },
         { status: 400 }
@@ -97,15 +99,23 @@ export async function PATCH(
     }
 
     // Update the post
+    type PostUpdateData = {
+      content: string | null
+      imageUrl: string | null
+      videoUrl: string | null
+      url?: string | null
+      type: string
+    }
+    const updateData: PostUpdateData = {
+      content: content !== undefined ? content : post.content,
+      imageUrl: imageUrl !== undefined ? imageUrl : post.imageUrl,
+      videoUrl: videoUrl !== undefined ? videoUrl : post.videoUrl,
+      url: url !== undefined ? url : postWithUrl.url || null,
+      type: type || post.type,
+    }
     const updatedPost = await prisma.post.update({
       where: { id: postId },
-      data: {
-        content: content !== undefined ? content : post.content,
-        imageUrl: imageUrl !== undefined ? imageUrl : post.imageUrl,
-        videoUrl: videoUrl !== undefined ? videoUrl : post.videoUrl,
-        url: url !== undefined ? url : (post as any).url,
-        type: type || post.type,
-      } as any,
+      data: updateData,
     });
 
     return NextResponse.json(updatedPost);

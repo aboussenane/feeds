@@ -120,9 +120,11 @@ export async function POST(request: NextRequest) {
     });
 
     // Include username in response for redirect
+    type FeedWithUser = typeof feed & { user?: { username: string | null } | null }
+    const feedWithUser = feed as FeedWithUser
     return NextResponse.json({
       ...feed,
-      username: (feed as any).user?.username || null,
+      username: feedWithUser.user?.username || null,
     }, { status: 201 });
   } catch (error) {
     console.error("Error creating feed:", error);

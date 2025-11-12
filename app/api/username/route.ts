@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     const normalizedUsername = username.toLowerCase();
 
     // Check if username is taken (direct lookup since stored in lowercase)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingUser = await (prisma as any).user.findUnique({
       where: { username: normalizedUsername },
     });

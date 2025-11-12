@@ -81,11 +81,13 @@ export async function regenerateApiKey(userId: string) {
  * Get or create a user record in the database
  */
 export async function getOrCreateUser(userId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let user = await (prisma as any).user.findUnique({
     where: { id: userId },
   })
 
   if (!user) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     user = await (prisma as any).user.create({
       data: {
         id: userId,
@@ -105,6 +107,7 @@ export async function getUserByUsername(username: string) {
   const normalizedUsername = username.toLowerCase()
   
   // Direct lookup since usernames are stored in lowercase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return await (prisma as any).user.findUnique({
     where: { username: normalizedUsername },
     include: {
@@ -135,6 +138,7 @@ export async function updateUsername(userId: string, newUsername: string) {
   const user = await getOrCreateUser(userId)
 
   // Check if username is already taken (usernames are stored in lowercase)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existingUser = await (prisma as any).user.findUnique({
     where: { username: normalizedUsername },
   })
@@ -153,6 +157,7 @@ export async function updateUsername(userId: string, newUsername: string) {
   }
 
   // Update username (store in lowercase)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updatedUser = await (prisma as any).user.update({
     where: { id: userId },
     data: {

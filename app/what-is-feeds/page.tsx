@@ -67,7 +67,7 @@ export default function WhatIsFeedsPage() {
 
               <h2 className="text-2xl font-semibold mt-8 mb-4">Getting Started</h2>
               <p>
-                Ready to create your first feed? It's free and takes just a few minutes to get started.
+                Ready to create your first feed? It&apos;s free and takes just a few minutes to get started.
               </p>
               <div className="mt-6">
                 <Link href="/login">

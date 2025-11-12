@@ -61,7 +61,6 @@ export async function generateMetadata({
   // Get first image from latest post if available
   const imageUrl = latestPost?.imageUrl || latestPost?.videoUrl || null
 
-  const title = `${feed.title}${feed.description ? ` - ${feed.description}` : ""}`
   const description = feed.description || `View ${postCount} post${postCount !== 1 ? "s" : ""} in ${feed.title} by ${normalizedUsername}`
 
   return {

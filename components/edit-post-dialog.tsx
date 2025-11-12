@@ -32,7 +32,9 @@ export function EditPostDialog({
 }: EditPostDialogProps) {
   const [type, setType] = useState<"text" | "image" | "video" | "url">(post.type as "text" | "image" | "video" | "url")
   const [content, setContent] = useState(post.content || "")
-  const [url, setUrl] = useState((post as any).url || "") // URL for URL type posts
+  type PostWithUrl = typeof post & { url?: string | null }
+  const postWithUrl = post as PostWithUrl
+  const [url, setUrl] = useState(postWithUrl.url || "") // URL for URL type posts
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [videoFile, setVideoFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(post.imageUrl)
@@ -49,7 +51,7 @@ export function EditPostDialog({
     if (open && post) {
       setType(post.type as "text" | "image" | "video" | "url")
       setContent(post.content || "")
-      setUrl((post as any).url || "")
+      setUrl(postWithUrl.url || "")
       setImagePreview(post.imageUrl)
       setVideoPreview(post.videoUrl)
       setImageFile(null)
@@ -162,7 +164,7 @@ export function EditPostDialog({
     try {
       // Validate URL for URL posts
       if (type === "url") {
-        const urlToValidate = url || (post as any).url
+        const urlToValidate = url || postWithUrl.url
         if (!urlToValidate) {
           setError("URL is required")
           setLoading(false)
@@ -415,9 +417,9 @@ export function EditPostDialog({
 
           {type === "url" && (
             <div className="space-y-2">
-              <Label htmlFor="url">URL {!(post as any).url && "*"}</Label>
+              <Label htmlFor="url">URL {!postWithUrl.url && "*"}</Label>
               <p className="text-xs text-muted-foreground">
-                {(post as any).url ? "Leave empty to keep current URL" : "Paste a URL to embed (YouTube, images, videos, or any link)"}
+                {postWithUrl.url ? "Leave empty to keep current URL" : "Paste a URL to embed (YouTube, images, videos, or any link)"}
               </p>
               <Input
                 id="url"
