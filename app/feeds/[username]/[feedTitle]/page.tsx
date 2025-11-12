@@ -53,7 +53,7 @@ export async function generateMetadata({
     }
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://feeds-pink.vercel.app"
   const feedUrl = `${siteUrl}/feeds/${normalizedUsername}/${feedTitle}`
   const postCount = feed.posts.length
   const latestPost = feed.posts[0]

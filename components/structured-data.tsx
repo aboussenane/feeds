@@ -11,7 +11,7 @@ type StructuredDataProps = {
 }
 
 export function StructuredData({ feed, username, feedTitle }: StructuredDataProps) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://feeds-pink.vercel.app"
   const feedUrl = `${siteUrl}/feeds/${username}/${feedTitle}`
 
   // Blog/BlogPosting structured data

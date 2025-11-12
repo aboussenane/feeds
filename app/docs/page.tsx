@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default function DocsPage() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://feeds-pink.vercel.app"
   const baseUrl = siteUrl
 
   return (

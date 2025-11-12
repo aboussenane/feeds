@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Feeds" }],
   creator: "Feeds",
   publisher: "Feeds",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+      metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://feeds-pink.vercel.app"),
   openGraph: {
     type: "website",
     locale: "en_US",

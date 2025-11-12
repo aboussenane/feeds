@@ -54,13 +54,13 @@ ws users to manage, aggregate, and distribute feeds through a powerful dashboard
    Copy `.env.example` to `.env` and supply the appropriate values for Supabase and your database.
    
    **Required for SEO:**
-   - `NEXT_PUBLIC_SITE_URL`: Your site's public URL (e.g., `https://yourdomain.com`). This is used for generating sitemaps, Open Graph tags, and canonical URLs. If not set, defaults to `http://localhost:3000`.
+   - `NEXT_PUBLIC_SITE_URL`: Your site's public URL (e.g., `https://feeds-pink.vercel.app/`). This is used for generating sitemaps, Open Graph tags, and canonical URLs. If not set, defaults to `https://feeds-pink.vercel.app`.
 
 3. **Run with Docker (recommended):**
    ```sh
    docker-compose up --build
    ```
-   The app will be available at [http://localhost:3000](http://localhost:3000).
+       The app will be available at [https://feeds-pink.vercel.app](https://feeds-pink.vercel.app).
 
 4. **Manual Development Setup:**  
    Install dependencies with `npm install`, set required env vars, then run:

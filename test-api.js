@@ -2,7 +2,7 @@
  * API Test Script for Dev Feeds
  * Run with: node test-api.js [API_KEY]
  * 
- * Make sure the dev server is running on http://localhost:3000
+ * Make sure the dev server is running on https://feeds-pink.vercel.app
  */
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';

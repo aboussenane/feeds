@@ -2,7 +2,7 @@
 
 # API Test Script for Dev Feeds
 # This script tests all API endpoints
-# Make sure the dev server is running on http://localhost:3000
+# Make sure the dev server is running on https://feeds-pink.vercel.app
 
 BASE_URL="http://localhost:3001"
 API_KEY="${API_KEY:-}"  # Set this environment variable or pass as argument

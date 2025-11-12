@@ -32,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: "Feed not found" }, { status: 404 })
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://feeds-pink.vercel.app"
     const feedUrl = `${siteUrl}/feeds/${normalizedUsername}/${feedTitle}`
     
     // Generate RSS XML
