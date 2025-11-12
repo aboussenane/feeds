@@ -27,9 +27,10 @@ export default async function HomePage() {
     userId: string
     user?: { username: string | null } | null 
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const feeds: FeedWithUser[] = user
-    ? await ((prisma as any).feed.findMany({
+    ? await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (prisma as any).feed.findMany({
         where: {
           userId: user.id,
         },

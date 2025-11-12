@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Post } from "@prisma/client"
 import {
   Dialog,
@@ -60,6 +61,7 @@ export function EditPostDialog({
       setUploadProgress(0)
       setUploadStatus("")
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, post])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: "image" | "video") => {
@@ -237,7 +239,7 @@ export function EditPostDialog({
       // Reset form when closing
       setTimeout(() => {
         setContent(post.content || "")
-        setUrl((post as any).url || "")
+        setUrl(postWithUrl.url || "")
         setImageFile(null)
         setVideoFile(null)
         setImagePreview(post.imageUrl)
@@ -331,10 +333,12 @@ export function EditPostDialog({
                 />
                 {imagePreview && (
                   <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
+                      unoptimized
                     />
                     <Button
                       type="button"

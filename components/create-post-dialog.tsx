@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Post } from "@prisma/client"
 import {
   Dialog,
@@ -309,10 +310,12 @@ export function CreatePostDialog({
                 />
                 {imagePreview && (
                   <div className="relative w-full aspect-video rounded-lg overflow-hidden border">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
+                      unoptimized
                     />
                     <Button
                       type="button"
