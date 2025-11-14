@@ -18,8 +18,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Allow public access to login page and home
-  if (pathname === '/' || pathname.startsWith('/login') || pathname.startsWith('/auth')) {
+  // Allow public access to login page, home, and documentation pages
+  if (
+    pathname === '/' || 
+    pathname.startsWith('/login') || 
+    pathname.startsWith('/auth') ||
+    pathname === '/docs' ||
+    pathname === '/what-is-feeds' ||
+    pathname === '/how-to-create-feeds'
+  ) {
     return NextResponse.next()
   }
 

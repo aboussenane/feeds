@@ -37,12 +37,12 @@ export default function DocsPage() {
               <div className="prose prose-sm max-w-none">
                 <p>
                   Feeds is a developer-friendly feed hosting platform that allows you to create and manage content feeds programmatically. 
-                  All API requests require authentication using an API key.
+                  Most API requests require authentication using an API key, except for public endpoints like <code>/api/info</code> and <code>/api/health</code>.
                 </p>
                 <ul>
                   <li><strong>Base URL:</strong> <code>{baseUrl}/api</code></li>
-                  <li><strong>Authentication:</strong> Bearer token (API key)</li>
-                  <li><strong>Content-Type:</strong> <code>application/json</code></li>
+                  <li><strong>Authentication:</strong> Bearer token (API key) - required for most endpoints</li>
+                  <li><strong>Content-Type:</strong> <code>application/json</code> (or <code>multipart/form-data</code> for file uploads)</li>
                   <li><strong>Rate Limiting:</strong> Standard rate limits apply</li>
                 </ul>
               </div>
@@ -145,6 +145,59 @@ Content-Type: application/json
                   </div>
                 </div>
 
+                {/* Delete Feed */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">DELETE /api/feeds/delete/[feedId]</h3>
+                  <p className="text-muted-foreground mb-4">Delete a feed and all its posts</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`DELETE ${baseUrl}/api/feeds/delete/feed_id
+Authorization: Bearer YOUR_API_KEY`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "success": true
+}`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Update Feed Styles */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">PATCH /api/feeds/styles/[feedId]</h3>
+                  <p className="text-muted-foreground mb-4">Update feed styling (colors, fonts)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`PATCH ${baseUrl}/api/feeds/styles/feed_id
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "fontFamily": "Arial",
+  "fontColor": "#000000",
+  "secondaryTextColor": "#666666",
+  "cardBgColor": "#ffffff",
+  "cardBorderColor": "#e0e0e0",
+  "feedBgColor": "#f5f5f5",
+  "buttonColor": "#007bff",
+  "buttonSecondaryColor": "#6c757d"
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> All color fields must be in hex format (e.g., <code>#000000</code>). All fields are optional.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Create Post */}
                 <div className="border rounded-lg p-6">
                   <h3 className="text-xl font-semibold mb-2">POST /api/posts</h3>
@@ -167,6 +220,227 @@ Content-Type: application/json
                     <p className="text-sm text-muted-foreground">
                       <strong>Post Types:</strong> <code>text</code>, <code>image</code>, <code>video</code>, <code>url</code>
                     </p>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>For image posts:</strong> <code>{"{ \"feedId\": \"feed_id\", \"type\": \"image\", \"imageUrl\": \"https://...\" }"}</code>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>For video posts:</strong> <code>{"{ \"feedId\": \"feed_id\", \"type\": \"video\", \"videoUrl\": \"https://...\" }"}</code>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>For URL posts:</strong> <code>{"{ \"feedId\": \"feed_id\", \"type\": \"url\", \"url\": \"https://...\" }"}</code>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Update Post */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">PATCH /api/posts/[postId]</h3>
+                  <p className="text-muted-foreground mb-4">Update an existing post</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`PATCH ${baseUrl}/api/posts/post_id
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "content": "Updated content",
+  "type": "text"
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      All fields are optional. Only include fields you want to update.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Delete Post */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">DELETE /api/posts/[postId]</h3>
+                  <p className="text-muted-foreground mb-4">Delete a post</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`DELETE ${baseUrl}/api/posts/post_id
+Authorization: Bearer YOUR_API_KEY`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "success": true
+}`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Upload File */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">POST /api/upload</h3>
+                  <p className="text-muted-foreground mb-4">Upload an image or video file (max 50MB)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`POST ${baseUrl}/api/upload
+Authorization: Bearer YOUR_API_KEY
+Content-Type: multipart/form-data
+
+file: [binary file data]`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "url": "https://...public-url..."
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> Use the returned URL in <code>imageUrl</code> or <code>videoUrl</code> when creating posts.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Regenerate API Key */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">POST /api/api-key</h3>
+                  <p className="text-muted-foreground mb-4">Regenerate your API key (requires session auth, not API key)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`POST ${baseUrl}/api/api-key
+[Session cookie required]`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "key": "new_api_key_here"
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> This endpoint requires session authentication (browser cookie), not API key authentication.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Check Username */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">GET /api/username?username=...</h3>
+                  <p className="text-muted-foreground mb-4">Check if a username is available</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`GET ${baseUrl}/api/username?username=johndoe`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "available": true
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> Username must be 3-20 characters, alphanumeric with underscores and hyphens.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Update Username */}
+                <div className="border rounded-lg p-6">
+                  <h3 className="text-xl font-semibold mb-2">PATCH /api/username</h3>
+                  <p className="text-muted-foreground mb-4">Update your username (requires session auth, not API key)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`PATCH ${baseUrl}/api/username
+Content-Type: application/json
+[Session cookie required]
+
+{
+  "username": "newusername"
+}`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "username": "newusername"
+}`}
+                      </pre>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      <strong>Note:</strong> This endpoint requires session authentication (browser cookie), not API key authentication.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Public Endpoints */}
+                <div className="border rounded-lg p-6 border-primary/50">
+                  <h3 className="text-xl font-semibold mb-2">GET /api/info</h3>
+                  <p className="text-muted-foreground mb-4">Get API information (public, no authentication required)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`GET ${baseUrl}/api/info`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "name": "Feeds",
+  "description": "Developer-friendly feed hosting platform",
+  "version": "1.0.0",
+  "api": {
+    "baseUrl": "${baseUrl}/api",
+    "documentation": "${baseUrl}/docs",
+    "authentication": "Bearer token (API key)"
+  },
+  "features": [...],
+  "feedFormats": {...},
+  "links": {...}
+}`}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-6 border-primary/50">
+                  <h3 className="text-xl font-semibold mb-2">GET /api/health</h3>
+                  <p className="text-muted-foreground mb-4">Health check endpoint (public, no authentication required)</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="font-semibold text-sm">Request:</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`GET ${baseUrl}/api/health`}
+                      </pre>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">Response (200 OK):</p>
+                      <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+{`{
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}`}
+                      </pre>
+                    </div>
                   </div>
                 </div>
               </div>
