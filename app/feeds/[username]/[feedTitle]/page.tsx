@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { prisma } from "@/lib/prisma"
 import { FeedPageContent } from "@/components/feed-page-content"
 import { StructuredData } from "@/components/structured-data"
-import { getCurrentUser, getUserByUsername } from "@/lib/auth"
+import { getCurrentUser, resolveFeedOwner } from "@/lib/auth"
 import { Post } from "@prisma/client"
 import { Feed } from "@prisma/client"
 
@@ -26,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username, feedTitle } = await params
   const normalizedUsername = username.toLowerCase()
-  const user = await getUserByUsername(normalizedUsername)
+  const user = await resolveFeedOwner(normalizedUsername)
   
   if (!user) {
     return {
@@ -114,7 +114,7 @@ export default async function FeedPage({
   const normalizedUsername = username.toLowerCase()
   
   // Get user by username (case-insensitive lookup)
-  const user = await getUserByUsername(normalizedUsername)
+  const user = await resolveFeedOwner(normalizedUsername)
   
   if (!user) {
     notFound()

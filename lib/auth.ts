@@ -123,6 +123,28 @@ export async function getUserByUsername(username: string) {
 }
 
 /**
+ * Resolve feed owner from URL segment — supports username or Supabase user id.
+ * New users without a username use /feeds/{userId}/{slug} URLs.
+ */
+export async function resolveFeedOwner(identifier: string) {
+  const byUsername = await getUserByUsername(identifier)
+  if (byUsername) {
+    return byUsername
+  }
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidPattern.test(identifier)) {
+    return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return await (prisma as any).user.findUnique({
+    where: { id: identifier },
+  })
+}
+
+/**
  * Update username with 7-day cooldown validation
  */
 export async function updateUsername(userId: string, newUsername: string) {

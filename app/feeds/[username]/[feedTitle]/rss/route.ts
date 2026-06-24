@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { getUserByUsername } from "@/lib/auth"
+import { resolveFeedOwner } from "@/lib/auth"
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +10,7 @@ export async function GET(
     const { username, feedTitle } = await params
     const normalizedUsername = username.toLowerCase()
     
-    const user = await getUserByUsername(normalizedUsername)
+    const user = await resolveFeedOwner(normalizedUsername)
     if (!user) {
       return NextResponse.json({ error: "Feed not found" }, { status: 404 })
     }

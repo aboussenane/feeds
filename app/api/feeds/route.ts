@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/utils";
 import { authenticateRequest } from "@/lib/api-auth";
+import { getOrCreateUser } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
@@ -102,6 +103,8 @@ export async function POST(request: NextRequest) {
       }
       counter++;
     }
+
+    await getOrCreateUser(auth.userId);
 
     const feed = await prisma.feed.create({
       data: {

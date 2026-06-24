@@ -1,7 +1,50 @@
 # Dev Feeds
 
-Dev Feeds is a modern, open-source RSS/Atom feed management platform designed for developers and technical content creators. It allo
-ws users to manage, aggregate, and distribute feeds through a powerful dashboard and a developer-friendly API. Built with Next.js, TypeScript, and Prisma, Dev Feeds integrates authentication, API key management, and robust access control to ensure a secure and intuitive user experience.
+Dev Feeds is a modern, open-source RSS/Atom feed management platform designed for developers and technical content creators. It allows users to manage, aggregate, and distribute feeds through a powerful dashboard and a developer-friendly API. Built with Next.js, TypeScript, and Prisma, Dev Feeds integrates authentication, API key management, and robust access control to ensure a secure and intuitive user experience.
+
+## Showcase
+
+See a live example feed (local dev):
+
+**[My Awesome Feed](http://localhost:3000/feeds/27044d19-2aa5-4926-92c7-000725522b5b/my-awesome-feed)**
+
+- Web: `/feeds/{username-or-id}/{slug}`
+- RSS: `/feeds/{username-or-id}/{slug}/rss`
+- JSON Feed: `/feeds/{username-or-id}/{slug}/json`
+
+## Built for developers
+
+Feeds is designed around workflows developers already use: HTTP, curl, API keys, and standard syndication formats. You can run everything from a browser, a shell script, or a CI job without touching the UI.
+
+### Developer-friendly
+
+- **REST API** — Create feeds, publish posts, upload media, and manage styles with predictable JSON endpoints.
+- **Bearer token auth** — One API key per user (from your profile). Pass it as `Authorization: Bearer <key>`; no OAuth dance for automation.
+- **Standard output formats** — Every public feed exposes RSS and [JSON Feed](https://www.jsonfeed.org/) URLs alongside the HTML page, so readers and tools can subscribe without custom integration.
+- **Self-documenting** — `GET /api/info` returns API metadata; full endpoint docs live at `/docs`.
+- **Typed stack** — Next.js App Router, TypeScript, and Prisma make the codebase easy to extend and deploy.
+
+### Ease of access
+
+- **Fast onboarding** — Sign in with email, copy your API key from the profile page, and make your first `curl` request in minutes.
+- **Stable public URLs** — Feeds live at `/feeds/{username}/{slug}` (or `/feeds/{userId}/{slug}` before you set a username). Share one link for humans; append `/rss` or `/json` for machines.
+- **Public read, authenticated write** — Anyone can subscribe to or scrape a public feed; only you need a key to publish.
+- **Local or Docker** — `npm run dev` or `docker-compose up` gets you running with minimal setup.
+
+### Automatable
+
+- **Scriptable publishing** — Pipe build logs, release notes, or changelog entries into feeds from GitHub Actions, cron, or any HTTP client.
+- **Bulk operations** — List feeds (`GET /api/feeds`), create feeds (`POST /api/feeds`), add posts (`POST /api/posts`), and upload assets (`POST /api/upload`) without manual clicks.
+- **Included test harness** — `test-api.sh` and `test-api.js` exercise the API for smoke testing after deploy or during development.
+
+Example: create a feed from the command line:
+
+```sh
+curl -X POST http://localhost:3000/api/feeds \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "My Awesome Feed", "description": "Shipped from curl"}'
+```
 
 ## Features
 
@@ -70,12 +113,18 @@ ws users to manage, aggregate, and distribute feeds through a powerful dashboard
 
 ## API Overview
 
-- **Authentication:** All API requests require a valid API key.
+- **Authentication:** All write API requests require a valid API key (`Authorization: Bearer <key>`).
 - **Endpoints:**
-    - `/api/api-key`: Regenerate and retrieve the current user's API key (via POST).
-    - Additional endpoints for feeds and posts management are available via the developer documentation.
-- **Usage:**  
-  Send your API key as a Bearer token or through designated headers for secure access.
+    - `GET /api/feeds` — List your feeds and posts
+    - `POST /api/feeds` — Create a feed
+    - `POST /api/posts` — Publish to a feed
+    - `POST /api/upload` — Upload media for posts
+    - `POST /api/api-key` — Regenerate your API key
+    - `GET /api/info` — API metadata and feed format paths
+- **Public syndication** (no auth):
+    - `GET /feeds/[username]/[feedTitle]/rss`
+    - `GET /feeds/[username]/[feedTitle]/json`
+- **Documentation:** See `/docs` on a running instance for request/response examples.
 
 ## SEO Optimization
 
