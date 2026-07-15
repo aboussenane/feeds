@@ -4,33 +4,43 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        - DATABASE_URL=${DATABASE_URL}
-    container_name: dev-feeds
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - DATABASE_URL=${DATABASE_URL}
-    ports:
-      - "3000:3000"  # External port 3000 (standard Next.js port)
-    # DNS configuration to help with Supabase connectivity
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    # For production with reverse proxy, use bridge networking (default)
-    # For direct access, you can use network_mode: host (uncomment below)
-    # network_mode: host
-    volumes:
-      # Persist uploads directory across container restarts
-      - ./uploads:/app/public/uploads
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        DATABASE_URL: ${DATABASE_URL}
+
+    container_name: feeds
+
     restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: ${DATABASE_URL}
+      DIRECT_URL: ${DIRECT_URL}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+
+    ports:
+      - "4001:4000"
+
+    volumes:
+      - ./uploads:/app/public/uploads
+
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/api/health', r => process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+    networks:
+      - apps
+
+networks:
+  apps:
+    external: true

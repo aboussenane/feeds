@@ -4,9 +4,9 @@ Dev Feeds is a modern, open-source RSS/Atom feed management platform designed fo
 
 ## Showcase
 
-See a live example feed (local dev):
+See a live example feed:
 
-**[My Awesome Feed](http://localhost:3000/feeds/27044d19-2aa5-4926-92c7-000725522b5b/my-awesome-feed)**
+**[My Awesome Feed](https://feeds-pink.vercel.app/feeds/7e1b60ed-f208-4ea1-ae65-f8e22c294ad4/my-awesome-feed)**
 
 - Web: `/feeds/{username-or-id}/{slug}`
 - RSS: `/feeds/{username-or-id}/{slug}/rss`

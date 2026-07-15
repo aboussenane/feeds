@@ -6,8 +6,9 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
-# Copy package files
+# Copy package files and Prisma schema (postinstall runs prisma generate)
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm ci
 
 # Rebuild the source code only when needed
@@ -16,6 +17,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN mkdir -p public
 
 # Generate Prisma Client (needs schema file)
 RUN npx prisma generate
@@ -27,9 +29,11 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG DATABASE_URL
+ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV DATABASE_URL=$DATABASE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -55,10 +59,9 @@ RUN mkdir -p /app/public/uploads && chown -R nextjs:nodejs /app/public/uploads
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 4000
 
-ENV PORT 3000
+ENV PORT 4000
 ENV HOSTNAME "0.0.0.0"
 
 CMD ["node", "server.js"]
-

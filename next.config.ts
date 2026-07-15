@@ -1,10 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 'standalone' output is for Docker deployment
-  // Vercel doesn't need this - it handles Next.js deployments automatically
-  // Uncomment below if deploying to Docker, otherwise leave commented for Vercel
-  // output: 'standalone',
+  // Required by the production Docker image.
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
@@ -15,6 +13,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '**.supabase.in',
       },
+      {
+        protocol: 'https',
+        hostname: 'supabase.adeljs.dev',
+      },
     ],
     // Allow local uploads from public/uploads
     unoptimized: false,
@@ -22,4 +24,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
